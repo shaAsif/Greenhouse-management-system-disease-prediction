@@ -1,0 +1,1 @@
+# Greenhouse-management-system-disease-prediction
