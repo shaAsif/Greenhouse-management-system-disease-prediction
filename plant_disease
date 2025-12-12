@@ -1,0 +1,38 @@
+import cv2
+import numpy as np
+from tensorflow.keras.models import load_model
+
+# Load your trained Keras model
+model = load_model("plant_disease_model.h5")
+
+# URL of ESP32-CAM stream (replace with your IP)
+url = "http://192.168.0.105/capture"
+
+def preprocess(img):
+    img = cv2.resize(img, (224, 224))
+    img = img.astype("float32") / 255.0
+    img = np.expand_dims(img, axis=0)
+    return img
+
+# Classes of your model
+CLASSES = ["Healthy", "Leaf Spot", "Rust", "Blight"]
+
+while True:
+    # Read frame directly from URL
+    frame = cv2.imread(url)
+
+    if frame is not None:
+        img = preprocess(frame)
+        pred = model.predict(img)
+        label = CLASSES[np.argmax(pred)]
+
+        # Put prediction on frame
+        cv2.putText(frame, label, (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        cv2.imshow("ESP32-CAM Plant Monitor", frame)
+
+    if cv2.waitKey(1) == ord('q'):
+        break
+
+cv2.destroyAllWindows()
